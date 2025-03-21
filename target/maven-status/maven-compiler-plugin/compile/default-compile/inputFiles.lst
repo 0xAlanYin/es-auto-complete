@@ -1,0 +1,10 @@
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/controller/TokenController.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/service/TokenService.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/service/impl/TokenServiceImpl.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/dto/SuggestResponse.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/config/ElasticsearchIndexInitializer.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/config/ElasticsearchConfig.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/repository/TokenRepository.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/model/Token.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/EsAutoCompleteApplication.java
+/Users/xingyin/ai/es-auto-complete/src/main/java/com/example/esautocomplete/exception/GlobalExceptionHandler.java

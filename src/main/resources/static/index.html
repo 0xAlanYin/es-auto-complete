@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 DEX搜索测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            margin: 30px 0;
+            position: relative;
+        }
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .suggestions {
+            position: absolute;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .no-results {
+            color: #ff0000;
+            font-style: italic;
+        }
+        .correction {
+            color: #0066cc;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web3 DEX搜索测试</h1>
+    <p class="description">使用Elasticsearch实现的自动补全和纠错功能</p>
+    
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-box" placeholder="输入代币名称或符号..." autocomplete="off">
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+    
+    <div>
+        <button id="searchButton" class="button">搜索</button>
+        <button id="correctButton" class="button" style="display: none;">拼写纠错建议</button>
+    </div>
+    
+    <div id="results" class="results" style="display: none;"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBox = document.getElementById('searchBox');
+            const suggestionsBox = document.getElementById('suggestions');
+            const searchButton = document.getElementById('searchButton');
+            const correctButton = document.getElementById('correctButton');
+            const resultsBox = document.getElementById('results');
+            
+            let timeoutId;
+            
+            // 监听输入框的输入事件，实现自动补全
+            searchBox.addEventListener('input', function() {
+                clearTimeout(timeoutId);
+                const query = searchBox.value.trim();
+                
+                if (query.length > 0) {
+                    timeoutId = setTimeout(() => {
+                        fetchSuggestions(query);
+                    }, 300);
+                } else {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+            
+            // 监听搜索按钮点击事件
+            searchButton.addEventListener('click', function() {
+                const query = searchBox.value.trim();
+                if (query.length > 0) {
+                    performSearch(query);
+                }
+            });
+            
+            // 监听纠错按钮点击事件
+            correctButton.addEventListener('click', function() {
+                const query = searchBox.value.trim();
+                if (query.length > 0) {
+                    fetchCorrections(query);
+                }
+            });
+            
+            // 监听输入框的键盘事件，实现回车搜索
+            searchBox.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = searchBox.value.trim();
+                    if (query.length > 0) {
+                        performSearch(query);
+                    }
+                }
+            });
+            
+            // 获取自动补全建议
+            function fetchSuggestions(query) {
+                fetch(`/api/tokens/suggest?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            displaySuggestions(data.suggestions);
+                        } else {
+                            suggestionsBox.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取建议时出错:', error);
+                        suggestionsBox.style.display = 'none';
+                    });
+            }
+            
+            // 获取纠错建议
+            function fetchCorrections(query) {
+                fetch(`/api/tokens/correct?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            displayCorrections(data.suggestions);
+                        } else {
+                            resultsBox.innerHTML = '<p>没有找到纠错建议。</p>';
+                            resultsBox.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取纠错建议时出错:', error);
+                        resultsBox.innerHTML = '<p>获取纠错建议时出错。</p>';
+                        resultsBox.style.display = 'block';
+                    });
+            }
+            
+            // 执行搜索
+            function performSearch(query) {
+                // 简单搜索，假设直接匹配自动补全的结果
+                fetch(`/api/tokens/suggest?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            // 有匹配结果
+                            displayResults(data.suggestions);
+                            correctButton.style.display = 'none';
+                        } else {
+                            // 无匹配结果，显示纠错按钮
+                            resultsBox.innerHTML = '<p class="no-results">未找到匹配的结果。</p>';
+                            resultsBox.style.display = 'block';
+                            correctButton.style.display = 'inline-block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('搜索时出错:', error);
+                        resultsBox.innerHTML = '<p>搜索时出错。</p>';
+                        resultsBox.style.display = 'block';
+                    });
+            }
+            
+            // 显示自动补全建议
+            function displaySuggestions(suggestions) {
+                suggestionsBox.innerHTML = '';
+                
+                suggestions.forEach(suggestion => {
+                    const div = document.createElement('div');
+                    div.classList.add('suggestion-item');
+                    div.textContent = suggestion;
+                    
+                    div.addEventListener('click', function() {
+                        searchBox.value = suggestion;
+                        suggestionsBox.style.display = 'none';
+                        performSearch(suggestion);
+                    });
+                    
+                    suggestionsBox.appendChild(div);
+                });
+                
+                suggestionsBox.style.display = 'block';
+            }
+            
+            // 显示搜索结果
+            function displayResults(results) {
+                resultsBox.innerHTML = '<h3>搜索结果:</h3>';
+                
+                const ul = document.createElement('ul');
+                results.forEach(result => {
+                    const li = document.createElement('li');
+                    li.textContent = result;
+                    ul.appendChild(li);
+                });
+                
+                resultsBox.appendChild(ul);
+                resultsBox.style.display = 'block';
+            }
+            
+            // 显示纠错建议
+            function displayCorrections(corrections) {
+                resultsBox.innerHTML = '<h3>您是不是要搜索:</h3>';
+                
+                const ul = document.createElement('ul');
+                corrections.forEach(correction => {
+                    const li = document.createElement('li');
+                    const span = document.createElement('span');
+                    span.classList.add('correction');
+                    span.textContent = correction;
+                    
+                    span.addEventListener('click', function() {
+                        searchBox.value = correction;
+                        performSearch(correction);
+                    });
+                    
+                    li.appendChild(span);
+                    ul.appendChild(li);
+                });
+                
+                resultsBox.appendChild(ul);
+                resultsBox.style.display = 'block';
+            }
+            
+            // 点击页面其他地方时隐藏建议框
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchBox && e.target !== suggestionsBox) {
+                    suggestionsBox.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
