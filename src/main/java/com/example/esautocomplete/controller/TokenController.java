@@ -59,4 +59,23 @@ public class TokenController {
                 .suggestions(tokenService.getCorrections(query, size))
                 .build());
     }
+
+    /**
+     * 获取短语纠错建议
+     * 
+     * @param query 查询文本
+     * @param size 建议数量，默认为5
+     * @return 纠错建议列表
+     */
+    @GetMapping("/phrase-correct")
+    public ResponseEntity<SuggestResponse> getPhraseCorrections(
+            @RequestParam("query") String query,
+            @RequestParam(value = "size", defaultValue = "5") int size) {
+        
+        log.info("接收到短语纠错请求: query={}, size={}", query, size);
+        
+        return ResponseEntity.ok(SuggestResponse.builder()
+                .suggestions(tokenService.getPhraseCorrections(query, size))
+                .build());
+    }
 } 

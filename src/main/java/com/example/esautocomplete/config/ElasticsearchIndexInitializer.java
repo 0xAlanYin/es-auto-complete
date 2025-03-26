@@ -28,28 +28,31 @@ public class ElasticsearchIndexInitializer {
     @Autowired
     private TokenService tokenService;
     
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     public void initIndices() {
         try {
             log.info("正在检查并初始化Elasticsearch索引...");
-            
+
+            // 删除索引
+             elasticsearchOperations.indexOps(Token.class).delete();
+
             // 检查索引是否存在
             boolean indexExists = elasticsearchOperations.indexOps(Token.class).exists();
-            
+
             if (!indexExists) {
                 log.info("索引不存在，开始创建token索引...");
                 createTokenIndex();
-                
+
                 // 初始化示例数据
                 log.info("开始初始化样本数据...");
                 tokenService.initSampleData();
-                
+
                 log.info("token索引创建完成");
             } else {
                 log.info("token索引已存在，执行数据重新索引以确保大小写不敏感匹配生效");
                 tokenService.reindexAllTokens();
             }
-            
+
         } catch (Exception e) {
             log.error("初始化Elasticsearch索引时发生错误", e);
         }
